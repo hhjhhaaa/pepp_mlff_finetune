@@ -4,6 +4,7 @@ import hashlib
 import importlib.metadata
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -65,11 +66,24 @@ def environment_provenance(checkpoint: str | Path | None = None, device: str | N
     return provenance
 
 
+def mace_select_head_executable() -> str | None:
+    exe = shutil.which("mace_select_head")
+    if exe:
+        return exe
+    sibling = Path(sys.executable).resolve().parent / "mace_select_head"
+    if sibling.is_file():
+        return str(sibling)
+    return None
+
+
 def list_checkpoint_heads(checkpoint: str | Path, target_device: str = "cpu") -> list[str]:
     """Return heads advertised by a local MACE-MH checkpoint."""
-    exe = shutil.which("mace_select_head")
+    exe = mace_select_head_executable()
     if exe is None:
-        raise RuntimeError("mace_select_head not found on PATH; cannot validate checkpoint heads.")
+        raise RuntimeError(
+            "mace_select_head not found on PATH or next to the current Python executable; "
+            "cannot validate checkpoint heads."
+        )
     completed = subprocess.run(
         [exe, "--list_heads", str(checkpoint), "--target_device", target_device],
         text=True,
