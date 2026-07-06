@@ -6,9 +6,16 @@ __pycache__/
 /logs/
 /runs/
 /models/
+/outputs/
 *.out
 *.log
 *.lammps
+*.data
+*.params
+*.pdb.gz
+*.psf.gz
+*.emc.gz
+*.vmd
 
 *.lammpstrj
 *.traj

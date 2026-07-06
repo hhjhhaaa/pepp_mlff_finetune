@@ -13,9 +13,19 @@ Packmol, classical LAMMPS cleanup, or hand-written builders may be used only for
 
 `scripts/05_run_local_mace_mh_md.py` enforces this policy for bulk PE/PP/PS unless `--allow-non-emc-smoke` is passed for an explicit interface/driver smoke test. The zero-shot trajectories are provisional MLFF labels; only DFT/AIMD-anchored fine-tuned MACE output can be called MLFF reference labels.
 
-Use `scripts/06_import_emc_system.py` to import verified EMC outputs into `data/emc_systems/<system_id>/` before running MACE-MD. Structure format conversion must go through Open Babel (`obabel`, `exyz` output); scripts patch the LAMMPS/EMC cell back into the extxyz header so PBC is not lost.
+Use `scripts/06_import_emc_system.py --metadata-yaml <initial_builder_metadata.yaml>` to import verified EMC outputs into `data/emc_systems/<system_id>/` before running MACE-MD. Structure format conversion is performed in initial_builder through Open Babel (`obabel`, `exyz` output); this repository copies the exported `mlff_start_extxyz` and patches the LAMMPS/EMC cell back into the extxyz header so PBC is not lost.
 
-After EMC creation, run LAMMPS thermal relaxation with `scripts/07_lammps_thermal_relax_emc.py`. The classical relaxation follows the initial-builder staging style and uses a conservative polymer equilibration protocol:
+Build verified pure-component PE/PP/PS EMC structures in `pepp_initial_builder`, not in this MLFF repository. The MLFF repository only consumes structure-library entries exported by initial_builder.
+
+Current initial_builder lane for zero-shot/direct MLFF inputs:
+
+```text
+/home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer/<system_id>/
+```
+
+Do not sync over HPC AIMD data while consuming this library. If code must be copied to HPC, use non-destructive sync and exclude generated `data/`, `outputs/`, `runs/`, model checkpoints, and runtime logs.
+
+After EMC creation, run LAMMPS thermal relaxation in `pepp_initial_builder`, not in this MLFF repository. The classical relaxation follows the initial-builder staging style and uses a conservative polymer equilibration protocol:
 
 1. force-field minimization,
 2. Langevin + `nve/limit` warmup,
