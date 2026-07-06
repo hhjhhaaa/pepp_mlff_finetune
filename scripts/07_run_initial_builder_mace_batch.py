@@ -93,6 +93,30 @@ def run_command(command: list[str], dry_run: bool) -> int:
     return completed.returncode
 
 
+def merge_manifest_rows(manifest: Path, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    if manifest.exists():
+        existing = json.loads(manifest.read_text(encoding="utf-8"))
+        if isinstance(existing, list):
+            for row in existing:
+                if not isinstance(row, dict):
+                    continue
+                system_id = str(row.get("system_id") or "")
+                if not system_id:
+                    continue
+                if system_id in {str(item.get("system_id") or "") for item in rows}:
+                    continue
+                merged.append(row)
+                seen.add(system_id)
+    for row in rows:
+        system_id = str(row.get("system_id") or "")
+        if system_id and system_id not in seen:
+            merged.append(row)
+            seen.add(system_id)
+    return merged
+
+
 def run_batch(args: argparse.Namespace) -> int:
     rows = []
     status = 0
@@ -134,7 +158,8 @@ def run_batch(args: argparse.Namespace) -> int:
     out_dir = ROOT / "runs" / "mace_md" / args.batch_id
     out_dir.mkdir(parents=True, exist_ok=True)
     manifest = out_dir / "initial_builder_batch_manifest.json"
-    manifest.write_text(json.dumps(rows, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    manifest_rows = merge_manifest_rows(manifest, rows)
+    manifest.write_text(json.dumps(manifest_rows, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"batch_manifest": str(manifest), "rows": rows}, indent=2, sort_keys=True))
     return status
 

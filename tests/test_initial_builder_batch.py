@@ -49,3 +49,16 @@ def test_md_command_uses_imported_topology_manifest_and_mace_mh0():
     assert "--model-config" in command
     assert command[command.index("--model-config") + 1] == "configs/model/mace_mh0.yaml"
     assert "--overwrite" in command
+
+
+def test_merge_manifest_rows_preserves_other_systems(tmp_path: Path):
+    manifest = tmp_path / "initial_builder_batch_manifest.json"
+    manifest.write_text(
+        '[{"system_id": "PE100", "status": "ok"}, {"system_id": "PP100", "status": "md_failed"}]\n',
+        encoding="utf-8",
+    )
+    rows = batch.merge_manifest_rows(manifest, [{"system_id": "PP100", "status": "ok"}])
+    assert rows == [
+        {"system_id": "PE100", "status": "ok"},
+        {"system_id": "PP100", "status": "ok"},
+    ]
