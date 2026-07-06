@@ -1,0 +1,20 @@
+backend: mace
+model_family: mace_mh
+model_id: MACE-MH-1
+local_checkpoint: models/pretrained/mace_mh_1.model
+fallback_local_checkpoint: null
+candidate_heads: [mp_pbe_refit_add, omat_pbe, omol]
+selected_head: mp_pbe_refit_add
+foundation_head: mp_pbe_refit_add
+head_validation_required: true
+device: auto
+default_dtype: float32
+allow_api_fallback_for_smoke_test: false
+allow_api_fallback_for_training: false
+cache_policy:
+  allow_mace_auto_cache: false
+  note: "MACE-MH-1 is audit-only and must not be used as the routine production model."
+chemistry:
+  elements: [C, H, O, Si]
+  system: "small audit systems only, <=2800-3000 atoms"
+  use_case: "MH-0/MH-1 disagreement screening for DFT/AIMD candidate frames"

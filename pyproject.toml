@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pepp-mlff-finetune"
+version = "0.1.0"
+description = "PE/PP CP2K patch dataset preparation and MACE-OFF fine-tuning interfaces."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "ase",
+  "numpy",
+  "pandas",
+  "pyyaml",
+  "typer",
+  "rich",
+  "pydantic",
+]
+
+[project.optional-dependencies]
+mace = ["mace-torch"]
+dev = ["pytest", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100

@@ -1,0 +1,31 @@
+model_path: models/finetuned/pepp_mace_mh_finetune_v001.model
+test_file: data/splits/test.extxyz
+device: auto
+metrics:
+  - force_mae
+  - force_rmse
+  - energy_mae_per_atom
+  - energy_rmse_per_atom
+physical_metrics_reserved:
+  - nve_energy_drift
+  - nvt_rollout_stability
+  - rdf
+  - rg_distribution
+  - dihedral_distribution
+  - pe_pp_contact_statistics
+  - short_time_msd
+  - density_dependent_structure_sanity_check
+validation_gates:
+  max_force_rmse_eV_A: 0.15
+  max_energy_mae_meV_atom: 10.0
+  max_nve_energy_drift_meV_atom_ps: 5.0
+  max_bond_explosion_count: 0
+  require_no_nan: true
+  require_no_unphysical_cc_bond: true
+  require_no_unphysical_ch_bond: true
+rollout:
+  enabled: false
+  ensemble: NVT
+  timestep_fs: 0.5
+  temperature_K: 300
+  n_steps: 1000

@@ -1,0 +1,20 @@
+backend: mace
+model_family: mace_mh
+model_id: MACE-MH-0
+local_checkpoint: models/pretrained/mace_mh_0.model
+fallback_local_checkpoint: null
+candidate_heads: [mp_pbe_refit_add, omat_pbe, omol]
+selected_head: mp_pbe_refit_add
+foundation_head: mp_pbe_refit_add
+head_validation_required: true
+device: auto
+default_dtype: float32
+allow_api_fallback_for_smoke_test: false
+allow_api_fallback_for_training: false
+cache_policy:
+  allow_mace_auto_cache: false
+  note: "Production PE/PP/PS provisional labels must use local MACE-MH checkpoints, not API fallback."
+chemistry:
+  elements: [C, H, O, Si]
+  system: "PE/PP/PS bulk melts and PE/PP/PS-silica smoke/interface systems"
+  use_case: "zero-shot provisional MACE-MH-0 trajectories before DFT/AIMD-anchored fine-tuning"

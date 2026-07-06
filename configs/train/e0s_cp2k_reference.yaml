@@ -1,0 +1,8 @@
+label_level_id: null
+note: "Fill with C/H/O/Si reference E0s from the same CP2K label level before production training."
+E0s:
+  C: null
+  H: null
+  O: null
+  Si: null
+unit: eV

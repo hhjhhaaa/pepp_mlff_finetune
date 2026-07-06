@@ -1,0 +1,61 @@
+dataset_name: pepp_cp2k_patch_dataset
+dataset_version: v0.1.0
+raw_root: data/raw_cp2k
+processed_root: data/processed
+manifest: manifests/cp2k_patches.csv
+output_extxyz: data/processed/pepp_cp2k_patches.extxyz
+elements: [C, H, O, Si]
+energy_unit: hartree
+force_unit: hartree_per_bohr
+position_unit: angstrom
+sample_types: [capped_patch, periodic_bulk, periodic_subcell]
+force_label_policy:
+  require_force_label_valid: true
+  allowed_standard_training_scopes: [all_atoms]
+  mobile_atoms_only_without_mask: excluded
+stress_policy:
+  allow_missing_stress: true
+  train_stress_default: false
+split_profiles:
+  interpolation:
+    method: group_stratified
+    group_by: [parent_frame_id]
+    stratify_by: [density_g_cm3, composition, sample_type]
+    train_fraction: 0.8
+    val_fraction: 0.1
+    test_fraction: 0.1
+  extrapolation_density:
+    method: leave_one_group_out
+    group_by: density_g_cm3
+  extrapolation_composition:
+    method: leave_one_group_out
+    group_by: composition
+metadata_required:
+  - dataset_version
+  - label_level_id
+  - system_id
+  - system_type
+  - composition
+  - pe_fraction_global
+  - pp_fraction_global
+  - density_g_cm3
+  - sample_type
+  - pbc
+  - cell_source
+  - cap_type
+  - fixed_atoms_present
+  - force_label_valid
+  - force_label_scope
+  - cp2k_xc_functional
+  - dispersion
+  - basis_set
+  - potential
+  - cutoff
+  - rel_cutoff
+  - eps_scf
+  - scf_converged
+  - calculation_completed
+  - calculation_type
+  - reject_reason
+per_atom_metadata_required:
+  - atom_role

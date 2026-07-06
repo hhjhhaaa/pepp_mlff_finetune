@@ -1,0 +1,32 @@
+backend: mace
+mode: naive_finetune
+name: pepp_mace_mh_finetune_v001
+foundation_model: models/pretrained/mace_mh_1.model
+fallback_foundation_model: models/pretrained/mace_mh_0.model
+foundation_head: mp_pbe_refit_add
+require_local_foundation_model: true
+train_file: data/splits/train.extxyz
+valid_file: data/splits/val.extxyz
+test_file: data/splits/test.extxyz
+work_dir: runs/pepp_mace_mh_finetune_v001
+energy_key: energy
+forces_key: forces
+E0s:
+  mode: average_debug
+  production_mode: cp2k_reference_e0s
+  e0s_file: configs/train/e0s_cp2k_reference.yaml
+energy_weight: 0.1
+forces_weight: 1.0
+scaling: rms_forces_scaling
+batch_size: 2
+max_num_epochs: 20
+lr: 0.001
+default_dtype: float64
+device: auto
+seed: 42
+ema: true
+ema_decay: 0.99
+amsgrad: true
+multiheads_finetuning: false
+dry_run: true
+provenance_output: logs/mace_finetune_provenance.json
