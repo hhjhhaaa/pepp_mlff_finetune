@@ -15,6 +15,14 @@ Packmol, classical LAMMPS cleanup, or hand-written builders may be used only for
 
 Use `scripts/06_import_emc_system.py --metadata-yaml <initial_builder_metadata.yaml>` to import verified EMC outputs into `data/emc_systems/<system_id>/` before running MACE-MD. Structure format conversion is performed in initial_builder through Open Babel (`obabel`, `exyz` output); this repository copies the exported `mlff_start_extxyz` and patches the LAMMPS/EMC cell back into the extxyz header so PBC is not lost.
 
+For batch execution, use `scripts/07_run_initial_builder_mace_batch.py`. By default it only accepts initial_builder entries with:
+
+- `structure_task.lane: mlff_direct`
+- `status: available_relaxed`
+- `relaxation.lammps_thermal_relax_performed: true`
+
+The batch driver imports each entry with `scripts/06_import_emc_system.py`, then runs `scripts/05_run_local_mace_mh_md.py` with local MACE-MH-0.
+
 Build verified pure-component PE/PP/PS EMC structures in `pepp_initial_builder`, not in this MLFF repository. The MLFF repository only consumes structure-library entries exported by initial_builder.
 
 Current initial_builder lane for zero-shot/direct MLFF inputs:
