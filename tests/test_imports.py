@@ -1,5 +1,6 @@
 def test_import_package_and_modules():
     import pepp_mlff
+    import pepp_mlff.analysis.mace_md_summary
     import pepp_mlff.config.load_config
     import pepp_mlff.data.check_dataset
     import pepp_mlff.data.split_dataset
