@@ -183,12 +183,18 @@ def import_emc(args: argparse.Namespace) -> Path:
     if "PS" in set(components) and not topology.get("phenyl_rings"):
         raise ValueError("PS EMC import requires detectable phenyl_rings before production use.")
     (out_dir / "topology.json").write_text(json.dumps(topology, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    effective_component_chain_counts = topology["metadata"].get(
+        "component_chain_counts",
+        parse_component_chain_counts(component_chain_counts_raw),
+    )
 
     manifest = {
         "system_id": system_id,
         "components": components,
-        "n_chains": args.n_chains or builder_metadata.get("n_chains") or topology["metadata"]["n_molecules"],
-        "component_chain_counts": parse_component_chain_counts(component_chain_counts_raw),
+        "n_chains": topology["metadata"]["n_molecules"],
+        "component_chain_counts": effective_component_chain_counts,
+        "requested_component_chain_counts": topology["metadata"].get("requested_component_chain_counts", {}),
+        "component_chain_count_source": topology["metadata"].get("component_chain_count_source", "metadata"),
         "repeat_units": args.repeat_units or builder_metadata.get("repeat_units"),
         "target_density_g_cm3": args.target_density_g_cm3 or builder_metadata.get("target_density_g_cm3"),
         "target_temperature_K": args.target_temperature_K or builder_metadata.get("target_temperature_K"),

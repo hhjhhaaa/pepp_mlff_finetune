@@ -100,3 +100,44 @@ Atoms
 
     assert topology["component_id"] == ["PE", "PP"]
     assert topology["chain_id"] == [0, 1]
+
+
+def test_component_chain_counts_can_follow_emc_molecule_size_runs(tmp_path: Path):
+    data = tmp_path / "emc_adjusted_mix.data"
+    data.write_text(
+        """emc adjusted mix
+
+6 atoms
+0 bonds
+0 angles
+0 dihedrals
+
+1 atom types
+
+0 10 xlo xhi
+0 10 ylo yhi
+0 10 zlo zhi
+
+Atoms
+
+1 10 1 0.0 0 0 0
+2 10 1 0.0 1 0 0
+3 20 1 0.0 2 0 0
+4 20 1 0.0 3 0 0
+5 30 1 0.0 4 0 0
+6 40 1 0.0 5 0 0
+""",
+        encoding="utf-8",
+    )
+
+    topology = build_topology_from_lammps(
+        data,
+        ["C"] * 6,
+        ["PE", "PS"],
+        parse_component_chain_counts("PE:1,PS:1"),
+    )
+
+    assert topology["component_id"] == ["PE", "PE", "PE", "PE", "PS", "PS"]
+    assert topology["metadata"]["component_chain_counts"] == {"PE": 2, "PS": 2}
+    assert topology["metadata"]["requested_component_chain_counts"] == {"PE": 1, "PS": 1}
+    assert topology["metadata"]["component_chain_count_source"] == "inferred_from_lammps_molecule_size_runs"

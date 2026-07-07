@@ -104,9 +104,11 @@ def _component_ids_for_chains(
     ordered_chain_ids: list[int],
     components: list[str],
     component_chain_counts: dict[str, int],
-) -> dict[int, str]:
+    molecule_sizes: dict[int, int] | None = None,
+) -> tuple[dict[int, str], dict[str, int], dict[str, int]]:
+    requested_component_chain_counts = dict(component_chain_counts)
     if len(components) == 1 and not component_chain_counts:
-        return {chain_id: components[0] for chain_id in ordered_chain_ids}
+        return {chain_id: components[0] for chain_id in ordered_chain_ids}, {}, {}
     if not component_chain_counts:
         raise ValueError(
             "Multiple components require --component-chain-counts, for example PE:8,PP:8."
@@ -115,10 +117,18 @@ def _component_ids_for_chains(
     if missing:
         raise ValueError(f"Missing component counts for: {missing}")
     if sum(component_chain_counts.values()) != len(ordered_chain_ids):
-        raise ValueError(
-            "Component chain counts do not match molecule count: "
-            f"{component_chain_counts} vs {len(ordered_chain_ids)} molecules."
+        inferred = _infer_component_counts_from_molecule_size_runs(
+            ordered_chain_ids,
+            components,
+            molecule_sizes or {},
         )
+        if not inferred:
+            raise ValueError(
+                "Component chain counts do not match molecule count: "
+                f"{component_chain_counts} vs {len(ordered_chain_ids)} molecules."
+            )
+        component_chain_counts.clear()
+        component_chain_counts.update(inferred)
     chain_to_component: dict[int, str] = {}
     cursor = 0
     for component in components:
@@ -126,7 +136,37 @@ def _component_ids_for_chains(
         for chain_id in ordered_chain_ids[cursor : cursor + count]:
             chain_to_component[chain_id] = component
         cursor += count
-    return chain_to_component
+    return chain_to_component, requested_component_chain_counts, dict(component_chain_counts)
+
+
+def _infer_component_counts_from_molecule_size_runs(
+    ordered_chain_ids: list[int],
+    components: list[str],
+    molecule_sizes: dict[int, int],
+) -> dict[str, int]:
+    """Infer EMC component chain counts from consecutive molecule-size runs.
+
+    EMC can adjust requested chain counts to satisfy composition/size targets.
+    For the batch2a binary melts, molecules are emitted grouped by component and
+    the components have distinct atom counts. Use that actual LAMMPS ordering
+    when the requested metadata count is stale.
+    """
+    if len(components) < 2 or len(ordered_chain_ids) != len(molecule_sizes):
+        return {}
+    runs: list[tuple[int, int]] = []
+    last_size: int | None = None
+    for chain_id in ordered_chain_ids:
+        size = molecule_sizes[chain_id]
+        if size != last_size:
+            runs.append((size, 1))
+            last_size = size
+        else:
+            runs[-1] = (runs[-1][0], runs[-1][1] + 1)
+    if len(runs) != len(components):
+        return {}
+    if len({size for size, _count in runs}) != len(runs):
+        return {}
+    return {component: count for component, (_size, count) in zip(components, runs)}
 
 
 def _find_six_member_carbon_rings(symbols: list[str], bonds: list[list[int]]) -> list[list[int]]:
@@ -175,11 +215,19 @@ def build_topology_from_lammps(
     molecule_ids = [int(row["molecule_id"]) for row in atoms]
     ordered_molecules = sorted(set(molecule_ids))
     molecule_to_chain = {molecule_id: idx for idx, molecule_id in enumerate(ordered_molecules)}
-    chain_to_component = _component_ids_for_chains(
+    molecule_sizes = {
+        molecule_id: sum(1 for row in atoms if int(row["molecule_id"]) == molecule_id)
+        for molecule_id in ordered_molecules
+    }
+    chain_to_component, requested_component_chain_counts, effective_component_chain_counts = _component_ids_for_chains(
         ordered_molecules,
         components,
-        component_chain_counts or {},
+        dict(component_chain_counts or {}),
+        molecule_sizes,
     )
+    component_count_source = "metadata"
+    if requested_component_chain_counts != effective_component_chain_counts:
+        component_count_source = "inferred_from_lammps_molecule_size_runs"
 
     phenyl_rings = _find_six_member_carbon_rings(symbols, parsed["bonds"])
     phenyl_atoms = {idx for ring in phenyl_rings for idx in ring}
@@ -208,7 +256,10 @@ def build_topology_from_lammps(
         "metadata": {
             "topology_source": "emc",
             "complete_polymer_topology": bool(parsed["bonds"] and parsed["dihedrals"]),
-            "component_chain_counts": component_chain_counts or {},
+            "component_chain_counts": effective_component_chain_counts,
+            "requested_component_chain_counts": requested_component_chain_counts,
+            "component_chain_count_source": component_count_source,
+            "molecule_sizes": molecule_sizes,
             "n_molecules": len(ordered_molecules),
             "n_bonds": len(parsed["bonds"]),
             "n_angles": len(parsed["angles"]),
