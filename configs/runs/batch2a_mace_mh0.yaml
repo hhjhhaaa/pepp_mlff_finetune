@@ -14,9 +14,6 @@ stop_on_failure: true
 dry_run: false
 
 metadata_yamls:
-  - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer/PE100_N50_C10_emc_seed1/metadata.yaml
-  - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer/PP100_N30_C10_emc_seed1/metadata.yaml
-  - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer/PS100_N12_C16_emc_seed1/metadata.yaml
   - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer_batch2a/PE50_PP50_PE5xN50_PP5xN30_emc_seed1/metadata.yaml
   - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer_batch2a/PE50_PS50_PE5xN50_PS8xN12_emc_seed1/metadata.yaml
   - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer_batch2a/PP50_PS50_PP5xN30_PS8xN12_emc_seed1/metadata.yaml
@@ -29,4 +26,3 @@ production_scope:
   disallow_remote_mace: true
   disallow_api_fallback: true
   structure_source: initial_builder EMC + LAMMPS thermal relaxation
-
