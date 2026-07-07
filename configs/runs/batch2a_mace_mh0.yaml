@@ -1,0 +1,32 @@
+batch_id: batch2a_emc_mace_mh0_short
+replica_id: replica_0001
+model_config: configs/model/mace_mh0.yaml
+temperature_K: 523.0
+timestep_fs: 0.25
+stabilization_ps: 2.0
+production_ps: 5.0
+nve_audit_ps: 0.5
+default_dtype: float32
+overwrite: false
+allow_unrelaxed: false
+fail_unready: true
+stop_on_failure: true
+dry_run: false
+
+metadata_yamls:
+  - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer/PE100_N50_C10_emc_seed1/metadata.yaml
+  - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer/PP100_N30_C10_emc_seed1/metadata.yaml
+  - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer/PS100_N12_C16_emc_seed1/metadata.yaml
+  - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer_batch2a/PE50_PP50_PE5xN50_PP5xN30_emc_seed1/metadata.yaml
+  - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer_batch2a/PE50_PS50_PE5xN50_PS8xN12_emc_seed1/metadata.yaml
+  - /home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer_batch2a/PP50_PS50_PP5xN30_PS8xN12_emc_seed1/metadata.yaml
+
+label_policy: zero-shot outputs are provisional MLFF labels; not MLFF reference labels
+production_scope:
+  model_role: MACE-MH-0 zero-shot main production
+  atom_count_target: 3000-4200
+  atom_count_hard_limit: 4500
+  disallow_remote_mace: true
+  disallow_api_fallback: true
+  structure_source: initial_builder EMC + LAMMPS thermal relaxation
+

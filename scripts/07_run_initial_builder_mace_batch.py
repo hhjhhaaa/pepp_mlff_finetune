@@ -17,6 +17,38 @@ def load_yaml(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
+def apply_run_config(args: argparse.Namespace) -> argparse.Namespace:
+    if not args.run_config:
+        return args
+    config = load_yaml(Path(args.run_config).expanduser().resolve())
+    aliases = {
+        "metadata_yamls": "metadata_yaml",
+        "temperature_K": "temperature_K",
+        "timestep_fs": "timestep_fs",
+        "stabilization_ps": "stabilization_ps",
+        "production_ps": "production_ps",
+        "nve_audit_ps": "nve_audit_ps",
+        "default_dtype": "default_dtype",
+        "model_config": "model_config",
+        "batch_id": "batch_id",
+        "replica_id": "replica_id",
+        "overwrite": "overwrite",
+        "allow_unrelaxed": "allow_unrelaxed",
+        "fail_unready": "fail_unready",
+        "stop_on_failure": "stop_on_failure",
+        "dry_run": "dry_run",
+        "library_root": "library_root",
+    }
+    for key, attr in aliases.items():
+        if key not in config:
+            continue
+        value = config[key]
+        if attr == "metadata_yaml":
+            value = [str(item) for item in value]
+        setattr(args, attr, value)
+    return args
+
+
 def discover_metadata(args: argparse.Namespace) -> list[Path]:
     if args.metadata_yaml:
         return [Path(item).expanduser().resolve() for item in args.metadata_yaml]
@@ -166,6 +198,7 @@ def run_batch(args: argparse.Namespace) -> int:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Import initial_builder EMC library entries and run MACE-MH MD.")
+    parser.add_argument("--run-config", default=None, help="YAML batch run config. CLI remains command-compatible.")
     parser.add_argument(
         "--library-root",
         default="/home/jinhao/mlff/pepp_initial_builder/data/structure_library/mlff_direct/emc_polymer",
@@ -189,7 +222,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    return run_batch(parse_args())
+    return run_batch(apply_run_config(parse_args()))
 
 
 if __name__ == "__main__":

@@ -169,11 +169,15 @@ def import_emc(args: argparse.Namespace) -> Path:
         shutil.copy2(params, out_dir / params.name)
 
     components = [item.strip().upper() for item in components_value.split(",")]
+    component_chain_counts_raw = args.component_chain_counts or builder_metadata.get("component_chain_counts_arg")
+    if not component_chain_counts_raw and builder_metadata.get("component_chain_counts"):
+        counts = builder_metadata.get("component_chain_counts", {})
+        component_chain_counts_raw = ",".join(f"{component}:{int(counts[component])}" for component in components if component in counts)
     topology = build_topology_from_lammps(
         data_path,
         atoms.get_chemical_symbols(),
         components,
-        parse_component_chain_counts(args.component_chain_counts),
+        parse_component_chain_counts(component_chain_counts_raw),
     )
     topology["metadata"]["lammps_data_source"] = str(data_path)
     if "PS" in set(components) and not topology.get("phenyl_rings"):
@@ -184,6 +188,7 @@ def import_emc(args: argparse.Namespace) -> Path:
         "system_id": system_id,
         "components": components,
         "n_chains": args.n_chains or builder_metadata.get("n_chains") or topology["metadata"]["n_molecules"],
+        "component_chain_counts": parse_component_chain_counts(component_chain_counts_raw),
         "repeat_units": args.repeat_units or builder_metadata.get("repeat_units"),
         "target_density_g_cm3": args.target_density_g_cm3 or builder_metadata.get("target_density_g_cm3"),
         "target_temperature_K": args.target_temperature_K or builder_metadata.get("target_temperature_K"),

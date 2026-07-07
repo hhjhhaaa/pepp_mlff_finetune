@@ -62,3 +62,49 @@ def test_merge_manifest_rows_preserves_other_systems(tmp_path: Path):
         {"system_id": "PE100", "status": "ok"},
         {"system_id": "PP100", "status": "ok"},
     ]
+
+
+def test_run_config_populates_batch_arguments(tmp_path: Path):
+    run_config = tmp_path / "batch.yaml"
+    run_config.write_text(
+        "\n".join(
+            [
+                "batch_id: batch2a",
+                "replica_id: replica_x",
+                "model_config: configs/model/mace_mh0.yaml",
+                "stabilization_ps: 2.0",
+                "production_ps: 5.0",
+                "nve_audit_ps: 0.5",
+                "metadata_yamls:",
+                "  - /tmp/a/metadata.yaml",
+                "fail_unready: true",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    args = Namespace(
+        run_config=str(run_config),
+        metadata_yaml=None,
+        batch_id="old",
+        replica_id="old_replica",
+        model_config="old.yaml",
+        temperature_K=523.0,
+        timestep_fs=0.25,
+        stabilization_ps=1.0,
+        production_ps=2.0,
+        nve_audit_ps=0.0,
+        default_dtype="float32",
+        overwrite=False,
+        allow_unrelaxed=False,
+        fail_unready=False,
+        stop_on_failure=False,
+        dry_run=False,
+        library_root="/tmp/library",
+    )
+    updated = batch.apply_run_config(args)
+    assert updated.batch_id == "batch2a"
+    assert updated.replica_id == "replica_x"
+    assert updated.production_ps == 5.0
+    assert updated.metadata_yaml == ["/tmp/a/metadata.yaml"]
+    assert updated.fail_unready is True
